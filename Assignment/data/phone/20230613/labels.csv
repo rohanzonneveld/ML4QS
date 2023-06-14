@@ -1,0 +1,4 @@
+sensor_type,device_type,label,label_start,label_end
+interval_label,smartphone,Free Style,665.3837167, 1126.878655
+interval_label,smartphone,Back Stroke,1136.878655,1448.340030
+interval_label,smartphone,Breast Stroke,1458.340030,1763.912966

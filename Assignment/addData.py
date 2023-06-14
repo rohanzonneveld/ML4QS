@@ -1,4 +1,5 @@
 import sys, os
+import pandas as pd
 
 sys.path.append("Python3Code")
 from Chapter2.CreateDataset import CreateDataset
@@ -17,21 +18,26 @@ def get_folders_in_path(path):
 
 DATASET_PATH = Path('Assignment/data/phone/')
 RESULT_PATH = Path('Assignment/intermediate_datafiles/')
-RESULT_FNAME = 'dataset.csv'
+RESULT_FNAME = 'test_dataset.csv'
 
 [path.mkdir(exist_ok=True, parents=True) for path in [DATASET_PATH, RESULT_PATH]]
 
-dataset = CreateDataset(DATASET_PATH, 10)
+granularity = 10
+dataset = pd.DataFrame()
 
 folders = get_folders_in_path(DATASET_PATH)
 for folder in folders:
-    dataset.add_numerical_dataset(folder + '/Barometer.csv', 'Time (s)', ['X (hPa)'], 'avg', 'barometer_')
-    dataset.add_numerical_dataset(folder + '/Gyroscope.csv', 'Time (s)', ['X (rad/s)', 'Y (rad/s)', 'Z (rad/s)'], 'avg', 'gyroscope_')
-    dataset.add_numerical_dataset(folder + '/Linear Accelerometer.csv', 'Time (s)', ['X (m/s^2)', 'Y (m/s^2)', 'Z (m/s^2)'], 'avg', 'accelerometer_')
-    dataset.add_numerical_dataset(folder + '/Location.csv', 'Time (s)', ['Velocity (m/s)'], 'avg', 'location_')
-    dataset.add_event_dataset(folder + '/labels.csv', 'label_start', 'label_end', 'label', 'binary')
+    dummy = CreateDataset(DATASET_PATH, granularity)
+    start_time = pd.read_csv(DATASET_PATH / folder / 'meta/time.csv')['system time'][0]
+    dummy.add_numerical_dataset(folder + '/Barometer.csv', 'Time (s)', ['X (hPa)'], 'avg', 'barometer_', start_time=start_time)
+    dummy.add_numerical_dataset(folder + '/Gyroscope.csv', 'Time (s)', ['X (rad/s)', 'Y (rad/s)', 'Z (rad/s)'], 'avg', 'gyroscope_', start_time=start_time)
+    dummy.add_numerical_dataset(folder + '/Linear Accelerometer.csv', 'Time (s)', ['X (m/s^2)', 'Y (m/s^2)', 'Z (m/s^2)'], 'avg', 'accelerometer_', start_time=start_time)
+    dummy.add_numerical_dataset(folder + '/Location.csv', 'Time (s)', ['Velocity (m/s)'], 'avg', 'location_', start_time=start_time)
+    dummy.add_event_dataset(folder + '/labels.csv', 'label_start', 'label_end', 'label', 'binary', start_time=start_time)
+    # stack dummy on top of dataset
+    dataset = pd.concat([dataset, dummy.data_table])
 
-dataset = dataset.data_table
+
 util.print_statistics(dataset)
 # Plot the data
 DataViz = VisualizeDataset(__file__)
