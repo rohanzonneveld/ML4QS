@@ -21,7 +21,7 @@ from Chapter4.FrequencyAbstraction import FourierTransformation
 from Chapter4.TextAbstraction import TextAbstraction
 
 # Read the result from the previous chapter, and make sure the index is of the type datetime.
-DATA_PATH = Path('./intermediate_datafiles/')
+DATA_PATH = Path('Python3Code/intermediate_datafiles/')
 DATASET_FNAME = 'chapter3_result_final.csv'
 RESULT_FNAME = 'chapter4_result.csv'
 
