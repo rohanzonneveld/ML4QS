@@ -20,10 +20,6 @@ dataset = pd.read_csv(DATA_PATH / DATASET_FNAME, index_col=0)
 dataset.sort_index(inplace=True)
 
 dataset.index = pd.to_datetime(dataset.index)
-print(dataset.head(5))
-
-if 'location_Velocity (m/s)' in dataset.columns:
-    dataset.drop(columns=['location_Velocity (m/s)'], inplace=True)
 
 # Compute the number of milliseconds covered by an instance based on the first two rows
 milliseconds_per_instance = 10
@@ -38,6 +34,7 @@ NumAbs = NumericalAbstraction()
 FreqAbs = FourierTransformation()
         
 selected__columns = [c for c in dataset.columns if not 'label' in c]
+print(selected__columns)
 
 for column in selected__columns:
     for ws in window_sizes:        
@@ -47,8 +44,9 @@ for column in selected__columns:
         dataset = NumAbs.abstract_numerical(dataset, [column], ws, 'min')
         dataset = NumAbs.abstract_numerical(dataset, [column], ws, 'max')
 
+print(dataset.columns)
 
-dataset = FreqAbs.abstract_frequency(copy.deepcopy(dataset), selected__columns, int(float(10000)/milliseconds_per_instance), fs)
+# dataset = FreqAbs.abstract_frequency(copy.deepcopy(dataset), selected__columns, int(float(100)/milliseconds_per_instance), fs)
 
 
 # Now we only take a certain percentage of overlap in the windows, otherwise our training examples will be too much alike.
@@ -61,5 +59,5 @@ dataset = dataset.iloc[::skip_points,:]
 
 dataset.to_csv(DATA_PATH / RESULT_FNAME)
 print(len(dataset.columns))
-DataViz.plot_dataset(dataset, selected__columns, ['like', 'like', 'like', 'like', 'like', 'like', 'like','like'], ['line', 'line', 'line', 'line', 'line', 'line', 'line', 'points'])
+# DataViz.plot_dataset(dataset, selected__columns, ['like', 'like', 'like', 'like', 'like', 'like', 'like','like'], ['line', 'line', 'line', 'line', 'line', 'line', 'line', 'points'])
 

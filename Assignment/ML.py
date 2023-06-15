@@ -18,11 +18,11 @@ from util.VisualizeDataset import VisualizeDataset
 print("Set up")
 # Define the result file
 DATA_PATH = Path('Assignment/intermediate_datafiles/')
-DATASET_FNAME = 'cleaned_dataset.csv'
+DATASET_FNAME = 'final_dataset.csv'
 RESULT_FNAME = 'ML.csv'
 
 # parameters we'll use in the algorithms.
-N_FORWARD_SELECTION = 50
+N_FORWARD_SELECTION = 3
 
 # Load the result dataset
 try:
@@ -32,7 +32,7 @@ except IOError as e:
     raise e
 
 # convert timestamps to datetime
-dataset.index = pd.to_datetime(dataset.index, unit='s')
+dataset.index = pd.to_datetime(dataset.index)
 
 # Create an instance of visualization class to plot the results
 DataViz = VisualizeDataset(__file__)
@@ -42,8 +42,8 @@ prepare = PrepareDatasetForLearning()
 train_X, test_X, train_y, test_y = prepare.split_single_dataset_classification(dataset, ['label'], 'like', 0.7, filter=True, temporal=False)
 
 # Define all feature combination sets we want to test
-basic_features = ['accelerometer_X (m/s^2)_kalman_lowpass', 'accelerometer_Y (m/s^2)_kalman_lowpass', 'accelerometer_Z (m/s^2)_kalman_lowpass', 'gyroscope_X (rad/s)_kalman_lowpass', 'gyroscope_Y (rad/s)_kalman_lowpass', 'gyroscope_Z (rad/s)_kalman_lowpass', 'barometer_X (hPa)_kalman_lowpass', 'location_Velocity (m/s)_kalman_lowpass']
-pca_features = ['pca_1', 'pca_2', 'pca_3', 'pca_4', 'pca_5', 'pca_6', 'pca_7', 'pca_8']
+basic_features = ['accelerometer_X (m/s^2)', 'accelerometer_Y (m/s^2)', 'accelerometer_Z (m/s^2)', 'gyroscope_X (rad/s)', 'gyroscope_Y (rad/s)', 'gyroscope_Z (rad/s)']#, 'barometer_X (hPa)']
+pca_features = ['pca_1', 'pca_2', 'pca_3']
 time_features = [name for name in dataset.columns if '_temp_' in name]
 freq_features = [name for name in dataset.columns if (('_freq' in name) or ('_pse' in name))]
 print('#basic features: ', len(basic_features))
@@ -72,8 +72,7 @@ DataViz.plot_xy(x=[range(1, N_FORWARD_SELECTION+1)], y=[ordered_scores],
                 xlabel='number of features', ylabel='accuracy')
 
 # Select the best combination of features
-#TODO: select the best combination of features as selected_features based on ordered_features
-selected_features = basic_features[:]
+selected_features = ordered_features
 
 ## Test Regularization #############################################################################################################
 print("Test Regularization")
@@ -102,7 +101,7 @@ for reg_param in reg_parameters:
     performance_training.append(performance_tr/N_REPEATS_NN)
     performance_test.append(performance_te/N_REPEATS_NN)
 DataViz.plot_xy(x=[reg_parameters, reg_parameters], y=[performance_training, performance_test], method='semilogx',
-                xlabel='regularization parameter value', ylabel='accuracy', ylim=[0.95, 1.01],
+                xlabel='regularization parameter value', ylabel='accuracy', ylim=[0.5, 1.01],
                 names=['training', 'test'], line_styles=['r-', 'b:'])
 
 ## Grid search and cross-validation #############################################################################################################
