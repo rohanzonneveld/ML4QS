@@ -32,7 +32,6 @@ for folder in folders:
     dummy.add_numerical_dataset(folder + '/Barometer.csv', 'Time (s)', ['X (hPa)'], 'avg', 'barometer_', start_time=start_time)
     dummy.add_numerical_dataset(folder + '/Gyroscope.csv', 'Time (s)', ['X (rad/s)', 'Y (rad/s)', 'Z (rad/s)'], 'avg', 'gyroscope_', start_time=start_time)
     dummy.add_numerical_dataset(folder + '/Linear Accelerometer.csv', 'Time (s)', ['X (m/s^2)', 'Y (m/s^2)', 'Z (m/s^2)'], 'avg', 'accelerometer_', start_time=start_time)
-    dummy.add_numerical_dataset(folder + '/Location.csv', 'Time (s)', ['Velocity (m/s)'], 'avg', 'location_', start_time=start_time)
     dummy.add_event_dataset(folder + '/labels.csv', 'label_start', 'label_end', 'label', 'binary', start_time=start_time)
     # stack dummy on top of dataset
     dataset = pd.concat([dataset, dummy.data_table])
