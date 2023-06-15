@@ -17,7 +17,10 @@ DATASET_FNAME = 'cleaned_dataset.csv'
 RESULT_FNAME = 'final_dataset.csv'
 
 dataset = pd.read_csv(DATA_PATH / DATASET_FNAME, index_col=0)
+dataset.sort_index(inplace=True)
+
 dataset.index = pd.to_datetime(dataset.index)
+print(dataset.head(5))
 
 if 'location_Velocity (m/s)' in dataset.columns:
     dataset.drop(columns=['location_Velocity (m/s)'], inplace=True)
@@ -34,10 +37,7 @@ DataViz = VisualizeDataset(__file__)
 NumAbs = NumericalAbstraction()
 FreqAbs = FourierTransformation()
         
-        
 selected__columns = [c for c in dataset.columns if not 'label' in c]
-
-#columns = ['accelerometer_X (m/s^2)', 'accelerometer_Y (m/s^2)', 'accelerometer_Z (m/s^2)']
 
 for column in selected__columns:
     for ws in window_sizes:        
@@ -46,7 +46,6 @@ for column in selected__columns:
         dataset = NumAbs.abstract_numerical(dataset, [column], ws, 'median')
         dataset = NumAbs.abstract_numerical(dataset, [column], ws, 'min')
         dataset = NumAbs.abstract_numerical(dataset, [column], ws, 'max')
-        
 
 
 dataset = FreqAbs.abstract_frequency(copy.deepcopy(dataset), selected__columns, int(float(10000)/milliseconds_per_instance), fs)
