@@ -177,7 +177,7 @@ class ClassificationAlgorithms:
     # probabilities associated with each class, each class being represented as a column in the data frame.
     # Again, use CV of 3 which will increase the speed of your model
     # Also, usage of n_jobs in GridSearchCV could help to increase the speed
-    def decision_tree(self, train_X, train_y, test_X, min_samples_leaf=50, criterion='gini', print_model_details=False, export_tree_path='./figures/crowdsignals_ch7_classification/', export_tree_name='tree.dot', gridsearch=True):
+    def decision_tree(self, train_X, train_y, test_X, min_samples_leaf=10, criterion='gini', print_model_details=False, export_tree_path='./figures/crowdsignals_ch7_classification/', export_tree_name='tree.dot', gridsearch=True):
         # Create the model
         if gridsearch:
             tuned_parameters = [{'min_samples_leaf': [2, 10, 50, 100, 200],

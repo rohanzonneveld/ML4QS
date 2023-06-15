@@ -21,7 +21,6 @@ dataset.sort_index(inplace=True)
 #dataset = dataset.head(30_000)
 
 dataset.index = pd.to_datetime(dataset.index)
-
 if 'location_Velocity (m/s)' in dataset.columns:
     dataset.drop(columns=['location_Velocity (m/s)'], inplace=True)
 
