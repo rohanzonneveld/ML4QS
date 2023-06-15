@@ -3,5 +3,5 @@ datasets
 PythonCode/intermediate_datafiles/
 PythonCode/Example_graphs/
 *.DS_Store
-Assignment/data/watch
-Assignment/intermediate_datafiles
+Assignment/data/watch/
+Assignment/intermediate_datafiles/

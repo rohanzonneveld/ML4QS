@@ -18,7 +18,7 @@ def get_folders_in_path(path):
 
 DATASET_PATH = Path('Assignment/data/phone/')
 RESULT_PATH = Path('Assignment/intermediate_datafiles/')
-RESULT_FNAME = 'test_dataset.csv'
+RESULT_FNAME = 'dataset.csv'
 
 [path.mkdir(exist_ok=True, parents=True) for path in [DATASET_PATH, RESULT_PATH]]
 
@@ -42,7 +42,7 @@ util.print_statistics(dataset)
 # Plot the data
 DataViz = VisualizeDataset(__file__)
 #DataViz.plot_dataset_boxplot(dataset, ['gyroscope_X (rad/s)','gyroscope_Y (rad/s) ','gyroscope_Z (rad/s) ','accelerometer_X (m/s^2)','accelerometer_Y (m/s^2)','accelerometer_Z (m/s^2)'])
-DataViz.plot_dataset_boxplot(dataset, ['accelerometer_X (m/s^2)', 'accelerometer_Y (m/s^2)', 'accelerometer_Z (m/s^2)', 'gyroscope_X (rad/s)', 'gyroscope_Y (rad/s)', 'gyroscope_Z (rad/s)'])
+# DataViz.plot_dataset_boxplot(dataset, ['accelerometer_X (m/s^2)', 'accelerometer_Y (m/s^2)', 'accelerometer_Z (m/s^2)', 'gyroscope_X (rad/s)', 'gyroscope_Y (rad/s)', 'gyroscope_Z (rad/s)'])
 
 # Plot all data
 dataset.to_csv(RESULT_PATH / RESULT_FNAME)
