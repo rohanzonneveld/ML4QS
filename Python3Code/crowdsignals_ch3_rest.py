@@ -22,7 +22,7 @@ from Chapter3.ImputationMissingValues import ImputationMissingValues
 from Chapter3.KalmanFilters import KalmanFilters
 
 # Set up the file names and locations.
-DATA_PATH = Path('./intermediate_datafiles/')    
+DATA_PATH = Path('Python3Code/intermediate_datafiles/')    
 DATASET_FNAME = 'chapter3_result_outliers.csv'
 RESULT_FNAME = 'chapter3_result_final.csv'
 ORIG_DATASET_FNAME = 'chapter2_result.csv'

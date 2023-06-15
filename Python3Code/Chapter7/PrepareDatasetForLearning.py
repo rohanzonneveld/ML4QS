@@ -39,7 +39,7 @@ class PrepareDatasetForLearning:
             # If we have exactly one true class column, we can assign that value,
             # otherwise we keep the default class.
             if sum_values[i] == 1:
-                dataset.iloc[i, dataset.columns.get_loc(self.class_col)] = dataset[labels].iloc[i].idxmax(axis=1)
+                dataset.iloc[i, dataset.columns.get_loc(self.class_col)] = dataset[labels].iloc[i].idxmax(axis=0)
         # And remove our old binary columns.
         dataset = dataset.drop(labels, axis=1)
         return dataset

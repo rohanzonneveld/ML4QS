@@ -18,7 +18,7 @@ from pathlib import Path
 import argparse
 
 # Set up file names and locations.
-DATA_PATH = Path('./intermediate_datafiles/')
+DATA_PATH = Path('Python3Code/intermediate_datafiles/')
 DATASET_FNAME = 'chapter2_result.csv'
 RESULT_FNAME = 'chapter3_result_outliers.csv'
 

@@ -41,12 +41,15 @@ class CreateDataset:
         self.data_table = pd.DataFrame(index=timestamps, columns=c, dtype=object)
 
     # Add numerical data, we assume timestamps in the form of nanoseconds from the epoch
-    def add_numerical_dataset(self, file, timestamp_col, value_cols, aggregation='avg', prefix='', start_time=1686244428):
+    def add_numerical_dataset(self, file, timestamp_col, value_cols, aggregation='avg', prefix='', start_time=0):
         print(f'Reading data from {file}')
         dataset = pd.read_csv(self.base_dir / file, skipinitialspace=True)
 
-        # Convert timestamps to dates
-        dataset[timestamp_col] = pd.to_datetime(dataset[timestamp_col], unit='s') + pd.to_timedelta(start_time, unit='s')
+        # Convert timestamps to dates. If statement added to prevent original crowdsignals script from breaking
+        if start_time == 0:
+            dataset[timestamp_col] = pd.to_datetime(dataset[timestamp_col])
+        else:
+            dataset[timestamp_col] = pd.to_datetime(dataset[timestamp_col], unit='s') + pd.to_timedelta(start_time, unit='s')
 
         # Create a table based on the times found in the dataset
         if self.data_table is None:
@@ -79,13 +82,17 @@ class CreateDataset:
 
     # Add data in which we have rows that indicate the occurrence of a certain event with a given start and end time.
     # 'aggregation' can be 'sum' or 'binary'.
-    def add_event_dataset(self, file, start_timestamp_col, end_timestamp_col, value_col, aggregation='sum', start_time=1686244428):
+    def add_event_dataset(self, file, start_timestamp_col, end_timestamp_col, value_col, aggregation='sum', start_time=0):
         print(f'Reading data from {file}')
         dataset = pd.read_csv(self.base_dir / file)
 
-        # Convert timestamps to datetime.
-        dataset[start_timestamp_col] = pd.to_datetime(dataset[start_timestamp_col], unit='s') + pd.to_timedelta(start_time, unit='s')
-        dataset[end_timestamp_col] = pd.to_datetime(dataset[end_timestamp_col], unit='s') + pd.to_timedelta(start_time, unit='s')
+        # Convert timestamps to datetime. If statement added to prevent original crowdsignals script from breaking
+        if start_time == 0:
+            dataset[start_timestamp_col] = pd.to_datetime(dataset[start_timestamp_col])
+            dataset[end_timestamp_col] = pd.to_datetime(dataset[end_timestamp_col])
+        else:
+            dataset[start_timestamp_col] = pd.to_datetime(dataset[start_timestamp_col], unit='s') + pd.to_timedelta(start_time, unit='s')
+            dataset[end_timestamp_col] = pd.to_datetime(dataset[end_timestamp_col], unit='s') + pd.to_timedelta(start_time, unit='s')
 
         # Clean the event values in the dataset
         dataset[value_col] = dataset[value_col].apply(self.clean_name)
