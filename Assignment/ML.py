@@ -50,11 +50,11 @@ print('#basic features: ', len(basic_features))
 print('#PCA features: ', len(pca_features))
 print('#time features: ', len(time_features))
 print('#frequency features: ', len(freq_features))
-cluster_features = ['cluster']
+cluster_features = [] #['cluster']
 print('#cluster features: ', len(cluster_features))
 features_after_chapter_3 = list(set().union(basic_features, pca_features))
 features_after_chapter_4 = list(set().union(basic_features, pca_features, time_features, freq_features))
-features_after_chapter_5 = list(set().union(basic_features, pca_features, time_features, freq_features))#, cluster_features))
+features_after_chapter_5 = list(set().union(basic_features, pca_features, time_features, freq_features, cluster_features))
 
 ## Feature Selection #############################################################################################################
 print("Feature Selection")

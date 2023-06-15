@@ -13,8 +13,8 @@ from Chapter4.FrequencyAbstraction import FourierTransformation
 from Chapter4.TextAbstraction import TextAbstraction
 
 DATA_PATH = Path('Assignment/intermediate_datafiles/')
-DATASET_FNAME = 'dataset.csv'
-RESULT_FNAME = 'dataset_features.csv'
+DATASET_FNAME = 'cleaned_dataset.csv'
+RESULT_FNAME = 'final_dataset.csv'
 
 dataset = pd.read_csv(DATA_PATH / DATASET_FNAME, index_col=0)
 dataset.index = pd.to_datetime(dataset.index)
@@ -23,7 +23,7 @@ if 'location_Velocity (m/s)' in dataset.columns:
     dataset.drop(columns=['location_Velocity (m/s)'], inplace=True)
 
 # Compute the number of milliseconds covered by an instance based on the first two rows
-milliseconds_per_instance = 1000
+milliseconds_per_instance = 10
 
 window_sizes = [int(float(5000)/milliseconds_per_instance), int(float(0.5*60000)/milliseconds_per_instance), int(float(5*60000)/milliseconds_per_instance)]
 ws = int(float(0.5*60000)/milliseconds_per_instance)
