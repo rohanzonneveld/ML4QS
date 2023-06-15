@@ -51,6 +51,8 @@ class NumericalAbstraction:
             return data.rolling(window, min_periods=window_size).std()
         elif aggregation_function == 'slope':
             return data.rolling(window, min_periods=window_size).apply(self.get_slope)
+        elif aggregation_function == 'energy':
+            return data.pow(2).rolling(window_size).sum() / window_size
         
         #TODO: add your own aggregation function here
         else:
