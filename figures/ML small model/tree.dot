@@ -1,0 +1,13 @@
+digraph Tree {
+node [shape=box, fontname="helvetica"] ;
+edge [fontname="helvetica"] ;
+0 [label="pca_1_temp_max_ws_500 <= 0.401\ngini = 0.655\nsamples = 45\nvalue = [13, 13, 19]\nclass = labelFreeStyle"] ;
+1 [label="gini = 0.0\nsamples = 19\nvalue = [0, 0, 19]\nclass = labelFreeStyle"] ;
+0 -> 1 [labeldistance=2.5, labelangle=45, headlabel="True"] ;
+2 [label="pca_3_temp_energy_ws_3000 <= 0.0\ngini = 0.5\nsamples = 26\nvalue = [13, 13, 0]\nclass = labelBackStroke"] ;
+0 -> 2 [labeldistance=2.5, labelangle=-45, headlabel="False"] ;
+3 [label="gini = 0.0\nsamples = 13\nvalue = [0, 13, 0]\nclass = labelBreastStroke"] ;
+2 -> 3 ;
+4 [label="gini = 0.0\nsamples = 13\nvalue = [13, 0, 0]\nclass = labelBackStroke"] ;
+2 -> 4 ;
+}

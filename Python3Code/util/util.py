@@ -89,11 +89,12 @@ def print_table_row_performances(row_name, training_len, test_len, values):
     for val in values:
         print(' & ', end='')
         sd_train = math.sqrt((val[0]*(1-val[0]))/training_len)
-        print("{0:.4f}".format(val[0]), end='')
-        print('\\emph{(', "{0:.4f}".format(val[0]-2*sd_train), '-', "{0:.4f}".format(val[0]+2*sd_train), ')}', ' & ', end='')
+        print("{0:.2f}".format(val[0]), end='')
+        # print('\\emph{(', "{0:.2f}".format(val[0]-2*sd_train), '-', "{0:.2f}".format(val[0]+2*sd_train), ')}', end='')
+        print(' & ', end='')
         sd_test = math.sqrt((val[1]*(1-val[1]))/test_len)
-        print("{0:.4f}".format(val[1]), end='')
-        print('\\emph{(', "{0:.4f}".format(val[1]-2*sd_test), '-', "{0:.4f}".format(val[1]+2*sd_test), ')}', end='')
+        print("{0:.2f}".format(val[1]), end='')
+        # print('\\emph{(', "{0:.2f}".format(val[1]-2*sd_test), '-', "{0:.2f}".format(val[1]+2*sd_test), ')}', end='')
         scores_over_sd.append([val[0], sd_train, val[1], sd_test])
     print('\\\\\\hline')
     return scores_over_sd

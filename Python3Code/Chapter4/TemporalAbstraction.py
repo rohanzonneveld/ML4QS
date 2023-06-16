@@ -9,6 +9,7 @@
 
 import numpy as np
 import scipy.stats as stats
+import pandas as pd
 
 # Class to abstract a history of numerical values we can use as an attribute.
 class NumericalAbstraction:
@@ -64,9 +65,8 @@ class NumericalAbstraction:
         for col in cols:
             
             aggregations = self.aggregate_value(data_table[col], window_size, aggregation_function_name)
-            data_table[col + '_temp_' + aggregation_function_name + '_ws_' + str(window_size)] = aggregations
-      
-        
+            aggregations.rename(col + '_temp_' + aggregation_function_name + '_ws_' + str(window_size), inplace=True)
+            data_table = data_table.join(aggregations)
         return data_table
 
 # Class to perform categorical abstraction. We obtain patterns of categorical attributes that occur frequently
