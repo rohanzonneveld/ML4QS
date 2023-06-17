@@ -18,11 +18,13 @@ from util.VisualizeDataset import VisualizeDataset
 print("Set up")
 # Define the result file
 DATA_PATH = Path('Assignment/intermediate_datafiles/')
-DATASET_FNAME = 'final_dataset.csv'
+DATASET_FNAME = 'small_final_dataset.csv'
 RESULT_FNAME = 'ML.csv'
+EXPORT_TREE_PATH = Path('figures/ML/')
+
 
 # parameters we'll use in the algorithms.
-N_FORWARD_SELECTION = 3
+N_FORWARD_SELECTION = 2
 
 # Load the result dataset
 try:
@@ -42,8 +44,8 @@ prepare = PrepareDatasetForLearning()
 train_X, test_X, train_y, test_y = prepare.split_single_dataset_classification(dataset, ['label'], 'like', 0.7, filter=True, temporal=False)
 
 # Define all feature combination sets we want to test
-basic_features = ['accelerometer_X (m/s^2)', 'accelerometer_Y (m/s^2)', 'accelerometer_Z (m/s^2)', 'gyroscope_X (rad/s)', 'gyroscope_Y (rad/s)', 'gyroscope_Z (rad/s)']#, 'barometer_X (hPa)']
-pca_features = ['pca_1', 'pca_2', 'pca_3']
+basic_features = ['accelerometer_X (m/s^2)', 'accelerometer_Y (m/s^2)', 'accelerometer_Z (m/s^2)']#, 'gyroscope_X (rad/s)', 'gyroscope_Y (rad/s)', 'gyroscope_Z (rad/s)']#, 'barometer_X (hPa)']
+pca_features = ['pca_1', 'pca_2']#, 'pca_3']
 time_features = [name for name in dataset.columns if '_temp_' in name]
 freq_features = [name for name in dataset.columns if (('_freq' in name) or ('_pse' in name))]
 print('#basic features: ', len(basic_features))
@@ -66,48 +68,22 @@ features, ordered_features, ordered_scores = fs.forward_selection(N_FORWARD_SELE
                                                                   test_X[features_after_chapter_5],
                                                                   train_y,
                                                                   test_y,
-                                                                  gridsearch=False)
+                                                                  gridsearch=False,
+                                                                  algorithm='DT')
 
 DataViz.plot_xy(x=[range(1, N_FORWARD_SELECTION+1)], y=[ordered_scores],
                 xlabel='number of features', ylabel='accuracy')
 
 # Select the best combination of features
 selected_features = ordered_features
-
-## Test Regularization #############################################################################################################
-print("Test Regularization")
-learner = ClassificationAlgorithms()
-eval = ClassificationEvaluation()
-
-reg_parameters = [0.0001, 0.001, 0.01, 0.1, 1, 10]
-performance_training = []
-performance_test = []
-
-N_REPEATS_NN = 3
-
-for reg_param in reg_parameters:
-    performance_tr = 0
-    performance_te = 0
-    for i in range(0, N_REPEATS_NN):
-
-        class_train_y, class_test_y, class_train_prob_y, class_test_prob_y = learner.feedforward_neural_network(
-            train_X, train_y,
-            test_X, hidden_layer_sizes=(250, ), alpha=reg_param, max_iter=500,
-            gridsearch=False
-        )
-
-        performance_tr += eval.accuracy(train_y, class_train_y)
-        performance_te += eval.accuracy(test_y, class_test_y)
-    performance_training.append(performance_tr/N_REPEATS_NN)
-    performance_test.append(performance_te/N_REPEATS_NN)
-DataViz.plot_xy(x=[reg_parameters, reg_parameters], y=[performance_training, performance_test], method='semilogx',
-                xlabel='regularization parameter value', ylabel='accuracy', ylim=[0.5, 1.01],
-                names=['training', 'test'], line_styles=['r-', 'b:'])
+print('Selected features after forward selection are: ', selected_features)
 
 ## Grid search and cross-validation #############################################################################################################
 print("Grid search and cross-validation")
+learner = ClassificationAlgorithms()
+eval = ClassificationEvaluation()
 possible_feature_sets = [basic_features, features_after_chapter_3, features_after_chapter_4, features_after_chapter_5, selected_features]
-feature_names = ['initial set', 'Chapter 3', 'Chapter 4', 'Chapter 5', 'Selected features']
+feature_names = ['Initial Set', '+PCA', '+Temporal', '+Cluster', 'Selected Features']
 N_KCV_REPEATS = 5
 
 scores_over_all_algs = []
@@ -125,7 +101,7 @@ for i in range(0, len(possible_feature_sets)):
     performance_te_rf = 0
     performance_te_svm = 0
 
-    for repeat in range(0, N_KCV_REPEATS):
+    for repeat in range(1, N_KCV_REPEATS+1):
         print("Training NeuralNetwork run {} / {} ... ".format(repeat, N_KCV_REPEATS, feature_names[i]))
         class_train_y, class_test_y, class_train_prob_y, class_test_prob_y = learner.feedforward_neural_network(
             selected_train_X, train_y, selected_test_X, gridsearch=True
@@ -191,3 +167,20 @@ for i in range(0, len(possible_feature_sets)):
     scores_over_all_algs.append(scores_with_sd)
 
 DataViz.plot_performances_classification(['NN', 'RF','SVM', 'KNN', 'DT', 'NB'], feature_names, scores_over_all_algs)
+
+## Test the best performing classifiers #############################################################################################################
+class_train_y, class_test_y, class_train_prob_y, class_test_prob_y = learner.decision_tree(train_X[selected_features], train_y, test_X[selected_features],
+                                                                                           gridsearch=True,
+                                                                                           print_model_details=True, export_tree_path=EXPORT_TREE_PATH)
+
+test_cm = eval.confusion_matrix(test_y, class_test_y, class_train_prob_y.columns)
+
+DataViz.plot_confusion_matrix(test_cm, class_train_prob_y.columns, normalize=False)
+
+class_train_y, class_test_y, class_train_prob_y, class_test_prob_y = learner.random_forest(
+    train_X[selected_features], train_y, test_X[selected_features],
+    gridsearch=True, print_model_details=True)
+
+test_cm = eval.confusion_matrix(test_y, class_test_y, class_train_prob_y.columns)
+
+DataViz.plot_confusion_matrix(test_cm, class_train_prob_y.columns, normalize=False)

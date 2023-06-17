@@ -11,16 +11,14 @@ from Chapter4.FrequencyAbstraction import FourierTransformation
 from Chapter5.Clustering import NonHierarchicalClustering
 
 DATA_PATH = Path('Assignment/intermediate_datafiles/')
-DATASET_FNAME = 'cleaned_dataset.csv'
-RESULT_FNAME = 'final_dataset.csv'
+DATASET_FNAME = 'small_cleaned_dataset.csv'
+RESULT_FNAME = 'small_final_dataset.csv'
 VERBOSE = False
 dataset = pd.read_csv(DATA_PATH / DATASET_FNAME, index_col=0)
 dataset.sort_index(inplace=True)
 #dataset = dataset.head(30_000)
 
 dataset.index = pd.to_datetime(dataset.index)
-if 'location_Velocity (m/s)' in dataset.columns:
-    dataset.drop(columns=['location_Velocity (m/s)'], inplace=True)
 
 # Compute the number of milliseconds covered by an instance based on the first two rows
 milliseconds_per_instance = 10.0
@@ -37,7 +35,6 @@ FreqAbs = FourierTransformation()
 start_column_len = len(dataset.columns)
 
 selected__columns = [c for c in dataset.columns if not 'label' in c]
-print(selected__columns)
 
 onlyCluster = True
 if not onlyCluster:
