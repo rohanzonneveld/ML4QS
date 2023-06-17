@@ -2,15 +2,13 @@ import sys, copy
 import pandas as pd
 import time
 from pathlib import Path
-import argparse
-
+import numpy as np
 sys.path.append("Python3Code")
-
+import util.util as util
 from util.VisualizeDataset import VisualizeDataset
 from Chapter4.TemporalAbstraction import NumericalAbstraction
-from Chapter4.TemporalAbstraction import CategoricalAbstraction
 from Chapter4.FrequencyAbstraction import FourierTransformation
-from Chapter4.TextAbstraction import TextAbstraction
+from Chapter5.Clustering import NonHierarchicalClustering
 
 DATA_PATH = Path('Assignment/intermediate_datafiles/')
 DATASET_FNAME = 'cleaned_dataset.csv'
@@ -41,24 +39,54 @@ start_column_len = len(dataset.columns)
 selected__columns = [c for c in dataset.columns if not 'label' in c]
 print(selected__columns)
 
-for column in selected__columns:
-    for ws in window_sizes:        
-        dataset = NumAbs.abstract_numerical(dataset, [column], ws, 'mean')
-        dataset = NumAbs.abstract_numerical(dataset, [column], ws, 'std')
-        dataset = NumAbs.abstract_numerical(dataset, [column], ws, 'median')
-        dataset = NumAbs.abstract_numerical(dataset, [column], ws, 'min')
-        dataset = NumAbs.abstract_numerical(dataset, [column], ws, 'max')
-        dataset = NumAbs.abstract_numerical(dataset, [column], ws, 'energy')
-    if (VERBOSE): DataViz.plot_dataset(dataset, [column, '{}_temp_mean'.format(column), '{}_temp_energy'.format(column), 'label'], ['exact', 'like', 'like', 'like'], ['line', 'line', 'line', 'points'])
+onlyCluster = True
+if not onlyCluster:
+    for column in selected__columns:
+        for ws in window_sizes:        
+            dataset = NumAbs.abstract_numerical(dataset, [column], ws, 'mean')
+            dataset = NumAbs.abstract_numerical(dataset, [column], ws, 'std')
+            dataset = NumAbs.abstract_numerical(dataset, [column], ws, 'median')
+            dataset = NumAbs.abstract_numerical(dataset, [column], ws, 'min')
+            dataset = NumAbs.abstract_numerical(dataset, [column], ws, 'max')
+            dataset = NumAbs.abstract_numerical(dataset, [column], ws, 'energy')
+        if (VERBOSE): DataViz.plot_dataset(dataset, [column, '{}_temp_mean'.format(column), '{}_temp_energy'.format(column), 'label'], ['exact', 'like', 'like', 'like'], ['line', 'line', 'line', 'points'])
 
-dataset = FreqAbs.abstract_frequency(copy.deepcopy(dataset), selected__columns, int(float(100)/milliseconds_per_instance), fs)
+    dataset = FreqAbs.abstract_frequency(copy.deepcopy(dataset), selected__columns, int(float(100)/milliseconds_per_instance), fs)
 
-# Now we only take a certain percentage of overlap in the windows, otherwise our training examples will be too much alike.
+    # Now we only take a certain percentage of overlap in the windows, otherwise our training examples will be too much alike.
 
-# The percentage of overlap we allow
-window_overlap = 0.9
-skip_points = int((1-window_overlap) * ws)
-dataset = dataset.iloc[::skip_points,:]
+    # The percentage of overlap we allow
+    window_overlap = 0.9
+    skip_points = int((1-window_overlap) * ws)
+    dataset = dataset.iloc[::skip_points,:]
+
+k_values = range(2, 10)
+silhouette_values = []
+
+# Do some initial runs to determine the right number for k
+clusteringNH = NonHierarchicalClustering()
+
+if False: #find optimal k value
+    for k in k_values:
+        print(f'k = {k}')
+        dataset_cluster = clusteringNH.k_means_over_instances(copy.deepcopy(
+            dataset), ['accelerometer_X (m/s^2)', 'accelerometer_Y (m/s^2)', 'accelerometer_Z (m/s^2)'], k, 'default', 20, 10)
+        silhouette_score = dataset_cluster['silhouette'].mean()
+        print(f'silhouette = {silhouette_score}')
+        silhouette_values.append(silhouette_score)
+
+    DataViz.plot_xy(x=[k_values], y=[silhouette_values], xlabel='k', ylabel='silhouette score',
+                    ylim=[0, 1], line_styles=['b-'])
+
+    k_values = range(2, 10)
+    silhouette_values = []
+
+dataset = clusteringNH.k_means_over_instances(dataset, ['accelerometer_X (m/s^2)', 'accelerometer_Y (m/s^2)', 'accelerometer_Z (m/s^2)'], 5, 'default', 50, 50)
+DataViz.plot_clusters_3d(dataset, ['accelerometer_X (m/s^2)', 'accelerometer_Y (m/s^2)', 'accelerometer_Z (m/s^2)'], 'cluster', ['label'])
+DataViz.plot_silhouette(dataset, 'cluster', 'silhouette')
+util.print_latex_statistics_clusters(
+    dataset, 'cluster', ['accelerometer_X (m/s^2)', 'accelerometer_Y (m/s^2)', 'accelerometer_Z (m/s^2)'], 'label')
+del dataset['silhouette']
 
 dataset.to_csv(DATA_PATH / RESULT_FNAME)
 
