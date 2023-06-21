@@ -17,12 +17,11 @@ RESULT_FNAME = 'final_dataset.csv'
 VERBOSE = False
 dataset = pd.read_csv(DATA_PATH / DATASET_FNAME, index_col=0)
 dataset.sort_index(inplace=True)
-#dataset = dataset.head(30_000)
 
 dataset.index = pd.to_datetime(dataset.index)
 
 # Compute the number of milliseconds covered by an instance based on the first two rows
-milliseconds_per_instance = 10.0
+milliseconds_per_instance = 10
 
 window_sizes = [int(float(5000)/milliseconds_per_instance), int(float(0.5*60000)/milliseconds_per_instance), int(float(5*60000)/milliseconds_per_instance)]
 ws = int(float(0.5*60000)/milliseconds_per_instance)
@@ -48,16 +47,18 @@ for column in selected__columns:
         dataset = NumAbs.abstract_numerical(dataset, [column], ws, 'energy')
     if (VERBOSE): DataViz.plot_dataset(dataset, [column, '{}_temp_mean'.format(column), '{}_temp_energy'.format(column), 'label'], ['exact', 'like', 'like', 'like'], ['line', 'line', 'line', 'points'])
 
-print("Frequency abstraction")
-dataset = FreqAbs.abstract_frequency(copy.deepcopy(dataset), selected__columns, int(float(100)/milliseconds_per_instance), fs)
+# print("Frequency abstraction")
+# dataset = FreqAbs.abstract_frequency(copy.deepcopy(dataset), selected__columns, int(float(100)/milliseconds_per_instance), fs)
 
 # Now we only take a certain percentage of overlap in the windows, otherwise our training examples will be too much alike.
-
+print(dataset.shape)
 print("Overlap")
 # The percentage of overlap we allow
 window_overlap = 0.9
 skip_points = int((1-window_overlap) * ws)
 dataset = dataset.iloc[::skip_points,:]
+
+print(dataset.shape)
 
 # print("Clustering")
 # clusteringNH = NonHierarchicalClustering()

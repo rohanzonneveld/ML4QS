@@ -5,14 +5,10 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import time
 import sys
-import numpy as np
 from datetime import datetime
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import LSTM, Dense, Flatten
 from sklearn.preprocessing import LabelEncoder, OneHotEncoder
-sys.path.append("Python3Code")
-from util.util import find_max_consecutive_occurrence
-
 
 sys.path.append("Python3Code")
 from util import util
@@ -56,11 +52,11 @@ stroke_types = labels.unique()
 num_sessions = 2
 num_strokes = 3
 num_features = len(dataset.columns)
-num_timepoints = find_max_consecutive_occurrence(labels)  # Assuming a fixed number of time points per stroke
+num_timepoints = util.find_max_consecutive_occurrence(labels)  # Assuming a fixed number of time points per stroke
 
 # Reshape and pad the data
 X = np.zeros((num_strokes * num_sessions, num_timepoints, num_features))
-y = np.zeros((num_strokes * num_sessions, num_timepoints), dtype=str)
+y = np.zeros(num_strokes * num_sessions, dtype=object)
 
 # Iterate over each session
 for session in range(num_sessions):
@@ -95,13 +91,13 @@ y_reshaped = y_encoded.reshape(-1, 1)
 # One-hot encode the reshaped labels
 onehot_encoder = OneHotEncoder(sparse=False)
 y_onehot = onehot_encoder.fit_transform(y_reshaped)
-y_onehot = y_onehot.reshape(-1, 3)
+y_onehot = y_onehot.reshape(6, 3)
 
 # Split the data into training and test sets
 X_train = X[:num_strokes]
 X_test = X[num_strokes:]
-y_train = y_onehot[:num_strokes]
-y_test = y_onehot[num_strokes:]
+y_train = y_onehot[:num_strokes,:]
+y_test = y_onehot[num_strokes:,:]
 
 # Create a sequential model
 model = Sequential()
