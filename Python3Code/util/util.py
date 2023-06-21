@@ -114,3 +114,25 @@ def print_pearson_correlations(correlations):
     for i in range(0, len(correlations)):
         if np.isfinite(correlations[i][1]):
             print(correlations[i][0], ' & ', "{0:.4f}".format(correlations[i][1]), '\\\\\\hline')
+
+def find_max_consecutive_occurrence(strings):
+    max_count = 0  # Maximum consecutive count
+    current_count = 1  # Current consecutive count
+
+    # Iterate through the array starting from the second string
+    for i in range(1, len(strings)):
+        if strings[i] == strings[i - 1]:
+            # If the current string is the same as the previous one,
+            # increment the current consecutive count
+            current_count += 1
+        else:
+            # If the current string is different, update the maximum
+            # consecutive count if necessary and reset the current count
+            max_count = max(max_count, current_count)
+            current_count = 1
+
+    # Update the maximum consecutive count after the loop ends
+    max_count = max(max_count, current_count)
+
+    return max_count
+

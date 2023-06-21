@@ -18,7 +18,7 @@ from util.VisualizeDataset import VisualizeDataset
 print("Set up")
 # Define the result file
 DATA_PATH = Path('Assignment/intermediate_datafiles/')
-DATASET_FNAME = 'small_final_dataset.csv'
+DATASET_FNAME = 'final_dataset.csv'
 RESULT_FNAME = 'ML.csv'
 EXPORT_TREE_PATH = Path('figures/ML/')
 
@@ -30,7 +30,7 @@ N_FORWARD_SELECTION = 2
 try:
     dataset = pd.read_csv(DATA_PATH / DATASET_FNAME, index_col=0)
 except IOError as e:
-    print('File not found, try to run previous crowdsignals scripts first!')
+    print('File not found')
     raise e
 
 # convert timestamps to datetime

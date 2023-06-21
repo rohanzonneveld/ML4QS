@@ -1,0 +1,21 @@
+digraph Tree {
+node [shape=box, fontname="helvetica"] ;
+edge [fontname="helvetica"] ;
+0 [label="pca_1_temp_min_ws_500 <= -0.156\ngini = 0.655\nsamples = 45\nvalue = [13, 13, 19]\nclass = labelFreeStyle"] ;
+1 [label="gini = 0.0\nsamples = 19\nvalue = [0, 0, 19]\nclass = labelFreeStyle"] ;
+0 -> 1 [labeldistance=2.5, labelangle=45, headlabel="True"] ;
+2 [label="accelerometer_X (m/s^2)_temp_energy_ws_3000 <= 0.904\ngini = 0.5\nsamples = 26\nvalue = [13, 13, 0]\nclass = labelBackStroke"] ;
+0 -> 2 [labeldistance=2.5, labelangle=-45, headlabel="False"] ;
+3 [label="pca_1_temp_min_ws_500 <= -0.128\ngini = 0.133\nsamples = 14\nvalue = [1, 13, 0]\nclass = labelBreastStroke"] ;
+2 -> 3 ;
+4 [label="accelerometer_X (m/s^2)_temp_energy_ws_3000 <= 0.643\ngini = 0.32\nsamples = 5\nvalue = [1, 4, 0]\nclass = labelBreastStroke"] ;
+3 -> 4 ;
+5 [label="gini = 0.5\nsamples = 2\nvalue = [1, 1, 0]\nclass = labelBackStroke"] ;
+4 -> 5 ;
+6 [label="gini = 0.0\nsamples = 3\nvalue = [0, 3, 0]\nclass = labelBreastStroke"] ;
+4 -> 6 ;
+7 [label="gini = 0.0\nsamples = 9\nvalue = [0, 9, 0]\nclass = labelBreastStroke"] ;
+3 -> 7 ;
+8 [label="gini = 0.0\nsamples = 12\nvalue = [12, 0, 0]\nclass = labelBackStroke"] ;
+2 -> 8 ;
+}
