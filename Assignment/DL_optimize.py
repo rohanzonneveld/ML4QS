@@ -6,8 +6,11 @@ from pathlib import Path
 import time
 import sys
 from datetime import datetime
+import tensorflow as tf
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import LSTM, Dense, Flatten, MaxPooling1D, Conv1D, Dropout
+from tensorflow.keras.optimizers.legacy import Adam
+import optuna
 from sklearn.preprocessing import LabelEncoder, OneHotEncoder
 import seaborn as sns
 from sklearn.metrics import confusion_matrix, classification_report
@@ -19,11 +22,8 @@ from util.VisualizeDataset import VisualizeDataset
 from Chapter7.PrepareDatasetForLearning import PrepareDatasetForLearning
 
 ## Set up #############################################################################################################
-print("Set up...")
 # Define the result file
 DATA_PATH = Path('Assignment/intermediate_datafiles/')
-FIGURE_PATH = Path('figures/DL_TCN_1/')
-os.makedirs(FIGURE_PATH, exist_ok=True)
 DATASET_FNAME = 'final_dataset.csv'
 
 # Load the result dataset
@@ -105,83 +105,46 @@ X_test = X[num_strokes:]
 y_train = y_onehot[:num_strokes,:]
 y_test = y_onehot[num_strokes:,:]
 
-# Parameters
-learning_rate = 7.909397807310018e-05
-num_filters = 32
-kernel_size = 5
-dropout_rate = 0.12176824273204394
-epochs = 10
-batch_size = 32
+def objective(trial):
+    # Define the parameter search space
+    learning_rate = trial.suggest_float('learning_rate', 1e-5, 1e-1, log=True)
+    num_filters = trial.suggest_categorical('num_filters', [32, 64, 128, 256])
+    kernel_size = trial.suggest_categorical('kernel_size', [3, 5])
+    dropout_rate = trial.suggest_float('dropout_rate', 0.0, 0.5)
+    epochs = trial.suggest_categorical('epochs', [10, 20, 30, 40, 50])
+    batch_size = trial.suggest_categorical('batch_size', [8, 16, 32, 64])
 
-# Create a sequential model
-print('Creating model...')
-model = Sequential()
+    # Build the model
+    model = Sequential()
+    model.add(Conv1D(filters=num_filters, kernel_size=kernel_size, activation='relu', input_shape=(num_timepoints, num_features)))
+    model.add(MaxPooling1D(pool_size=2))
+    model.add(Conv1D(filters=num_filters, kernel_size=kernel_size, activation='relu'))
+    model.add(MaxPooling1D(pool_size=2))
+    model.add(Flatten())
+    model.add(Dense(64, activation='relu'))
+    model.add(Dropout(dropout_rate))
+    model.add(Dense(num_strokes, activation='softmax'))
 
-## LSTM #############################################################################################
-# # Add an LSTM layer with 64 units
-# model.add(LSTM(64, input_shape=(num_timepoints, num_features)))
-# # Add a dense output layer with the desired number of classes or predictions
-# model.add(Dense(num_strokes, activation='softmax')) 
- 
+    # Compile the model
+    optimizer = Adam(learning_rate=learning_rate)
+    model.compile(optimizer=optimizer, loss='categorical_crossentropy', metrics=['accuracy'])
 
-# TCN ##############################################################################################    
-model.add(Conv1D(filters=num_filters, kernel_size=kernel_size, activation='relu', input_shape=(num_timepoints, num_features)))
-model.add(MaxPooling1D(pool_size=2))
-model.add(Conv1D(filters=num_filters, kernel_size=kernel_size, activation='relu'))
-model.add(MaxPooling1D(pool_size=2))
-model.add(Flatten())
-model.add(Dense(64, activation='relu'))
-model.add(Dropout(dropout_rate))
-model.add(Dense(num_strokes, activation='softmax'))
+    # Train the model
+    history = model.fit(X_train, y_train, epochs=epochs, batch_size=batch_size, verbose=0)
 
-####################################################################################################
-# Compile the model
-print('Training model...')
-model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
-# Print the model summary
-model.summary()
-# Train the model with your data
-history = model.fit(X_train, y_train, epochs=epochs, batch_size=batch_size) 
+    # Evaluate the model
+    loss, accuracy = model.evaluate(X_test, y_test)
 
-# Evaluate the model on your test data
-loss, accuracy = model.evaluate(X_test, y_test) 
+    # Return the validation accuracy as the objective value
+    return accuracy
 
-# Plot training loss
-plt.figure(figsize=(8, 6))
-plt.plot(history.history['loss'])
-plt.xlabel('Epoch')
-plt.ylabel('Loss')
-plt.savefig(FIGURE_PATH / 'training_loss.png')
-plt.show()
+# Create the Optuna study
+study = optuna.create_study(direction='maximize')
 
-# Plot training accuracy
-plt.figure(figsize=(8, 6))
-plt.plot(history.history['accuracy'])
-plt.xlabel('Epoch')
-plt.ylabel('Accuracy')
-plt.savefig(FIGURE_PATH / 'training_accuracy.png')
-plt.show()
+# Optimize the objective function
+study.optimize(objective, n_trials=100)
 
-# Generate predictions on test data
-print('Generating predictions...')
-y_pred = model.predict(X_test)  
-
-# Convert one-hot encoded predictions to class labels
-y_pred = np.argmax(y_pred, axis=1)
-# Convert one-hot encoded test labels to class labels
-y_test = np.argmax(y_test, axis=1)  
-
-# Create confusion matrix
-cm = confusion_matrix(y_test, y_pred)
-
-# Plot confusion matrix
-plt.figure(figsize=(8, 6))
-sns.heatmap(cm, annot=True, fmt='d', cmap='Blues')
-plt.xlabel('Predicted Labels')
-plt.ylabel('True Labels')
-plt.savefig(FIGURE_PATH / 'confusion_matrix.png')
-plt.show()
-
-# Print classification report
-print(classification_report(y_test, y_pred))
-
+# Print the best trial's parameters and objective value
+best_trial = study.best_trial
+print(f'Best Accuracy: {best_trial.value:.4f}')
+print(f'Best Parameters: {best_trial.params}')
