@@ -1,14 +1,17 @@
 import os
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from pathlib import Path
-import matplotlib.pyplot as plt
 import time
 import sys
 from datetime import datetime
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import LSTM, Dense, Flatten
 from sklearn.preprocessing import LabelEncoder, OneHotEncoder
+import seaborn as sns
+from sklearn.metrics import confusion_matrix, classification_report
+
 
 sys.path.append("Python3Code")
 from util import util
@@ -19,8 +22,9 @@ from Chapter7.PrepareDatasetForLearning import PrepareDatasetForLearning
 print("Set up")
 # Define the result file
 DATA_PATH = Path('Assignment/intermediate_datafiles/')
-DATASET_FNAME = 'small_final_dataset.csv'
-RESULT_FNAME = 'DL.csv'
+FIGURE_PATH = Path('figures/DL/')
+os.makedirs(FIGURE_PATH, exist_ok=True)
+DATASET_FNAME = 'final_dataset.csv'
 
 # Load the result dataset
 try:
@@ -49,8 +53,8 @@ session_dates = np.unique(dates)
 stroke_types = labels.unique()
 
 # Constants
-num_sessions = 2
-num_strokes = 3
+num_sessions = len(session_dates)
+num_strokes = len(stroke_types)
 num_features = len(dataset.columns)
 num_timepoints = util.find_max_consecutive_occurrence(labels)  # Assuming a fixed number of time points per stroke
 
@@ -91,7 +95,7 @@ y_reshaped = y_encoded.reshape(-1, 1)
 # One-hot encode the reshaped labels
 onehot_encoder = OneHotEncoder(sparse=False)
 y_onehot = onehot_encoder.fit_transform(y_reshaped)
-y_onehot = y_onehot.reshape(6, 3)
+y_onehot = y_onehot.reshape(num_sessions * num_strokes, num_strokes)
 
 # Split the data into training and test sets
 X_train = X[:num_strokes]
@@ -115,9 +119,46 @@ model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accur
 model.summary()
 
 # Train the model with your data
-model.fit(X_train, y_train, epochs=10, batch_size=32)  # Replace X_train and y_train with your training data
+history = model.fit(X_train, y_train, epochs=10, batch_size=32)  
 
 # Evaluate the model on your test data
 loss, accuracy = model.evaluate(X_test, y_test) 
 
+# Plot training loss
+plt.figure(figsize=(8, 6))
+plt.plot(history.history['loss'])
+plt.xlabel('Epoch')
+plt.ylabel('Loss')
+plt.savefig(FIGURE_PATH / 'training_loss.png')
+plt.show()
+
+# Plot training accuracy
+plt.figure(figsize=(8, 6))
+plt.plot(history.history['accuracy'])
+plt.xlabel('Epoch')
+plt.ylabel('Accuracy')
+plt.savefig(FIGURE_PATH / 'training_accuracy.png')
+plt.show()
+
+# Generate predictions on test data
+y_pred = model.predict(X_test)  
+
+# Convert one-hot encoded predictions to class labels
+y_pred = np.argmax(y_pred, axis=1)
+# Convert one-hot encoded test labels to class labels
+y_test = np.argmax(y_test, axis=1)  
+
+# Create confusion matrix
+cm = confusion_matrix(y_test, y_pred)
+
+# Plot confusion matrix
+plt.figure(figsize=(8, 6))
+sns.heatmap(cm, annot=True, fmt='d', cmap='Blues')
+plt.xlabel('Predicted Labels')
+plt.ylabel('True Labels')
+plt.savefig(FIGURE_PATH / 'confusion_matrix.png')
+plt.show()
+
+# Print classification report
+print(classification_report(y_test, y_pred))
 
