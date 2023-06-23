@@ -6,11 +6,16 @@ from pathlib import Path
 import time
 import sys
 from datetime import datetime
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import LSTM, Dense, Flatten, MaxPooling1D, Conv1D, Dropout
 from sklearn.preprocessing import LabelEncoder, OneHotEncoder
 import seaborn as sns
 from sklearn.metrics import confusion_matrix, classification_report
+from sklearn.model_selection import train_test_split
+from tensorflow.keras.layers import Input, Dense
+from tensorflow.keras.models import Model
+from tensorflow.keras.optimizers.legacy import Adam
+from tcn import TCN, tcn_full_summary
+from keras.utils.vis_utils import plot_model
+
 
 
 sys.path.append("Python3Code")
@@ -58,13 +63,15 @@ stroke_types = labels.unique()
 num_sessions = len(session_dates)
 num_strokes = len(stroke_types)
 num_features = len(dataset.columns)
-num_timepoints = util.find_max_consecutive_occurrence(labels)  # Assuming a fixed number of time points per stroke
+num_timepoints = 10*100  # 10 seconds of data sampled at 100 Hz
 
 # Reshape and pad the data
-X = np.zeros((num_strokes * num_sessions, num_timepoints, num_features))
-y = np.zeros(num_strokes * num_sessions, dtype=object)
+max_batch = int(util.find_max_consecutive_occurrence(labels)/num_timepoints) # the maximum number of batches of num_timepoints that can be extracted from the data
+X = np.zeros((num_strokes * num_sessions * max_batch, num_timepoints, num_features))
+y = np.zeros(num_strokes * num_sessions * max_batch, dtype=object)
 
 # Iterate over each session
+idx = 0
 for session in range(num_sessions):
     session_start_date = session_dates[session]
 
@@ -75,17 +82,19 @@ for session in range(num_sessions):
         
         # Reshape and pad the stroke data
         num_samples = len(session_stroke_data)
-        padded_data = np.zeros((num_timepoints, num_features))
-        
-        if num_samples <= num_timepoints:
-            padded_data[:num_samples] = session_stroke_data
-        else:
-            padded_data[:] = session_stroke_data[:num_timepoints]
-        
-        # Assign the reshaped and padded stroke data to the final array
-        stroke_idx = session * num_strokes + stroke
-        X[stroke_idx] = padded_data
-        y[stroke_idx] = stroke_types[stroke]  # Assign the stroke label 
+        batches = int(np.floor(num_samples / num_timepoints))
+        for batch in range(batches):
+            start_idx = batch * num_timepoints
+            end_idx = (batch + 1) * num_timepoints
+            if end_idx > num_samples:
+                break
+            X[idx, :, :] = session_stroke_data.iloc[start_idx:end_idx].values
+            y[idx] = stroke_types[stroke]  
+            idx += 1
+
+# delete all rows from X and y that are all zeros
+X = X[~np.all(X == 0, axis=(1, 2))]
+y = y[~(y.astype(str) == '0')]
 
 # Encode labels as integers using LabelEncoder
 label_encoder = LabelEncoder()
@@ -97,51 +106,44 @@ y_reshaped = y_encoded.reshape(-1, 1)
 # One-hot encode the reshaped labels
 onehot_encoder = OneHotEncoder(sparse=False)
 y_onehot = onehot_encoder.fit_transform(y_reshaped)
-y_onehot = y_onehot.reshape(num_sessions * num_strokes, num_strokes)
+y_onehot = y_onehot.reshape(-1, num_strokes)
 
-# Split the data into training and test sets
-X_train = X[:num_strokes]
-X_test = X[num_strokes:]
-y_train = y_onehot[:num_strokes,:]
-y_test = y_onehot[num_strokes:,:]
+# Split the data into training and test sets in a stratified manner
+X_train, X_test, y_train, y_test = train_test_split(X, y_onehot, test_size=0.3, stratify=y_onehot)
 
 # Parameters
-learning_rate = 7.909397807310018e-05
-num_filters = 32
+learning_rate = 3.787644382648462e-05
+num_filters = 128
 kernel_size = 5
-dropout_rate = 0.12176824273204394
-epochs = 10
-batch_size = 32
+dropout_rate = 0.007754162444363369
+dilations = [1, 2, 4, 8, 16, 32, 64, 128, 256]
+
 
 # Create a sequential model
 print('Creating model...')
-model = Sequential()
+
 
 ## LSTM #############################################################################################
 # # Add an LSTM layer with 64 units
+# model = Sequential()
 # model.add(LSTM(64, input_shape=(num_timepoints, num_features)))
 # # Add a dense output layer with the desired number of classes or predictions
 # model.add(Dense(num_strokes, activation='softmax')) 
  
 
 # TCN ##############################################################################################    
-model.add(Conv1D(filters=num_filters, kernel_size=kernel_size, activation='relu', input_shape=(num_timepoints, num_features)))
-model.add(MaxPooling1D(pool_size=2))
-model.add(Conv1D(filters=num_filters, kernel_size=kernel_size, activation='relu'))
-model.add(MaxPooling1D(pool_size=2))
-model.add(Flatten())
-model.add(Dense(64, activation='relu'))
-model.add(Dropout(dropout_rate))
-model.add(Dense(num_strokes, activation='softmax'))
-
+inputs = Input(shape=(num_timepoints, num_features))
+x = TCN(num_filters, kernel_size, dilations=dilations, dropout_rate=dropout_rate, return_sequences=False)(inputs)
+outputs = Dense(num_strokes, activation='relu')(x)
+model = Model(inputs=[inputs], outputs=[outputs])
 ####################################################################################################
 # Compile the model
 print('Training model...')
-model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
+model.compile(optimizer=Adam(learning_rate=learning_rate), loss='categorical_crossentropy', metrics=['accuracy'])
 # Print the model summary
 model.summary()
 # Train the model with your data
-history = model.fit(X_train, y_train, epochs=epochs, batch_size=batch_size) 
+history = model.fit(X_train, y_train, epochs=10, batch_size=32) 
 
 # Evaluate the model on your test data
 loss, accuracy = model.evaluate(X_test, y_test) 
@@ -185,3 +187,4 @@ plt.show()
 # Print classification report
 print(classification_report(y_test, y_pred))
 
+plot_model(model, to_file=FIGURE_PATH/'model-TCN.png', show_shapes=True)
