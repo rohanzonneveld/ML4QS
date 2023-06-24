@@ -24,7 +24,7 @@ EXPORT_TREE_PATH = Path('figures/ML/')
 
 
 # parameters we'll use in the algorithms.
-N_FORWARD_SELECTION = 2
+N_FORWARD_SELECTION = 5
 
 # Load the result dataset
 try:

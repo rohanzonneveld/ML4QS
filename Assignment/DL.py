@@ -14,8 +14,7 @@ from tensorflow.keras.layers import Input, Dense
 from tensorflow.keras.models import Model
 from tensorflow.keras.optimizers.legacy import Adam
 from tcn import TCN, tcn_full_summary
-from keras.utils.vis_utils import plot_model
-
+# from tensorflow.keras.utils import plot_model
 
 
 sys.path.append("Python3Code")
@@ -112,11 +111,11 @@ y_onehot = y_onehot.reshape(-1, num_strokes)
 X_train, X_test, y_train, y_test = train_test_split(X, y_onehot, test_size=0.3, stratify=y_onehot)
 
 # Parameters
-learning_rate = 3.787644382648462e-05
-num_filters = 128
-kernel_size = 5
-dropout_rate = 0.007754162444363369
-dilations = [1, 2, 4, 8, 16, 32, 64, 128, 256]
+learning_rate = 3.306727369753286e-05
+num_filters = 64
+kernel_size = 10
+dropout_rate = 0.0011129628019615496
+dilations = [1, 2, 4, 8, 16, 32]
 
 
 # Create a sequential model
@@ -187,4 +186,6 @@ plt.show()
 # Print classification report
 print(classification_report(y_test, y_pred))
 
-plot_model(model, to_file=FIGURE_PATH/'model-TCN.png', show_shapes=True)
+# use tcn_full_summary to display the model summary
+tcn_full_summary(model, expand_residual_blocks=False)
+# plot_model(model, to_file=FIGURE_PATH/'model-TCN.png', show_shapes=True)
